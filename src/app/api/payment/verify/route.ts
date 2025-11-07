@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { generateMemberId } from '@/lib/firebase/utils';
 import { generateRegId } from '@/lib/registration/types';
-import { getPhonePeAuthToken, checkPhonePeOrderStatus } from '@/lib/payment/phonepe';
+import { checkPhonePeOrderStatus } from '@/lib/payment/phonepe';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,26 +45,27 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get auth token and check payment status
-    console.log('Getting auth token...');
-    const authToken = await getPhonePeAuthToken();
-    
+    // Check payment status with PhonePe
     console.log('Checking order status...');
-    const orderStatus = await checkPhonePeOrderStatus(authToken, merchantOrderId);
+    const orderStatus = await checkPhonePeOrderStatus(merchantOrderId);
     console.log('Order status:', JSON.stringify(orderStatus, null, 2));
 
+    // Check if payment was successful
+    const paymentSuccess = orderStatus.success && orderStatus.code === 'PAYMENT_SUCCESS';
+    const paymentState = orderStatus.data?.state;
+
     // If payment not completed, update status to failed and return
-    if (orderStatus.state !== 'COMPLETED') {
+    if (!paymentSuccess || paymentState !== 'COMPLETED') {
       await pendingRegRef.update({
         payment_status: 'failed',
         status: 'failed',
-        payment_state: orderStatus.state,
+        payment_state: paymentState || 'UNKNOWN',
         failed_at: new Date().toISOString(),
       });
       return NextResponse.json({
         success: false,
-        state: orderStatus.state,
-        message: `Payment ${orderStatus.state.toLowerCase()}`,
+        state: paymentState || 'UNKNOWN',
+        message: `Payment ${paymentState?.toLowerCase() || 'failed'}`,
       });
     }
 
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
 
     // Create payment record
     const paymentData = {
-      payment_id: orderStatus.orderId,
+      payment_id: orderStatus.data?.transactionId || merchantOrderId,
       merchant_order_id: merchantOrderId,
       registration_id: regId,
       member_id: memberId,
@@ -195,7 +196,7 @@ export async function GET(request: NextRequest) {
         member_id: memberId,
         registration_type: registrationType,
         merchant_order_id: merchantOrderId,
-        phonepe_order_id: orderStatus.orderId,
+        transaction_id: orderStatus.data?.transactionId,
         amount: pendingData.amount,
       },
       timestamp,

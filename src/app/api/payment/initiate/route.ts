@@ -1,8 +1,8 @@
-// Payment Initiation API - Step 1: Create Payment Request (Standard Checkout)
+// Payment Initiation API - Step 1: Create Payment Request
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { registrationSchema } from '@/lib/validations/registration';
-import { generateTransactionId, getPhonePeAuthToken, createPhonePeOrder } from '@/lib/payment/phonepe';
+import { generateTransactionId, createPhonePeOrder } from '@/lib/payment/phonepe';
 
 // Handle donation payment
 async function handleDonationPayment(body: {
@@ -50,25 +50,28 @@ async function handleDonationPayment(body: {
     payment_initiated_at: Date.now(),
   });
 
-  // Get PhonePe auth token
-  const authToken = await getPhonePeAuthToken();
-
   // Create payment order
-  const orderResponse = await createPhonePeOrder(authToken, {
+  const orderResponse = await createPhonePeOrder({
     merchantOrderId,
     amount: amount * 100, // Convert to paise
+    mobileNumber: phone_number,
   });
 
-  // Update donation with order ID
+  if (!orderResponse.success) {
+    return NextResponse.json(
+      { error: 'Failed to create payment order', details: orderResponse.message },
+      { status: 500 }
+    );
+  }
+
+  // Update donation with transaction details
   await donationRef.update({
-    phonepe_order_id: orderResponse.orderId,
-    payment_state: orderResponse.state,
+    payment_state: 'PENDING',
   });
 
   return NextResponse.json({
     success: true,
     merchant_order_id: merchantOrderId,
-    order_id: orderResponse.orderId,
     payment_url: orderResponse.redirectUrl,
     message: 'Donation payment initiated successfully',
   });
@@ -150,32 +153,32 @@ export async function POST(request: NextRequest) {
       expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
     });
 
-    console.log('Getting PhonePe auth token...');
-    // Step 1: Get authorization token
-    const authToken = await getPhonePeAuthToken();
-    console.log('Auth token received');
-
-    // Step 2: Create payment order
     console.log('Creating PhonePe order...');
-    const orderResponse = await createPhonePeOrder(authToken, {
+    // Create payment order
+    const orderResponse = await createPhonePeOrder({
       merchantOrderId,
       amount: amount * 100, // Convert to paise
+      mobileNumber: formData.phone_number,
     });
     
     console.log('PhonePe Order Response:', JSON.stringify(orderResponse, null, 2));
 
-    // Store order ID in pending registration
+    if (!orderResponse.success) {
+      return NextResponse.json(
+        { error: 'Failed to create payment order', details: orderResponse.message },
+        { status: 500 }
+      );
+    }
+
+    // Store transaction details in pending registration
     await pendingRegRef.update({
-      phonepe_order_id: orderResponse.orderId,
-      payment_state: orderResponse.state,
+      payment_state: 'PENDING',
     });
 
     // Return redirect URL to open PhonePe checkout
-    // Note: Don't modify redirectUrl as PhonePe might not preserve custom params
     return NextResponse.json({
       success: true,
       merchant_order_id: merchantOrderId,
-      order_id: orderResponse.orderId,
       redirect_url: orderResponse.redirectUrl,
       message: 'Payment order created successfully',
     });
