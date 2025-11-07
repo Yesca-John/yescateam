@@ -1,7 +1,7 @@
 // Donation Payment Initiation API
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
-import { getPhonePeAuthToken, createPhonePeDonationOrder } from '@/lib/payment/phonepe';
+import { createPhonePeDonationOrder } from '@/lib/payment/phonepe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,23 +60,26 @@ export async function POST(request: NextRequest) {
       payment_status: 'pending',
     });
 
-    // Get PhonePe auth token
-    console.log('Getting PhonePe auth token for donation...');
-    const authToken = await getPhonePeAuthToken();
-
     // Create payment order with donation-specific callback URL
     console.log('Creating PhonePe order for donation...');
-    const orderResponse = await createPhonePeDonationOrder(authToken, {
+    const orderResponse = await createPhonePeDonationOrder({
       merchantOrderId,
       amount: amount * 100, // Convert to paise
+      mobileNumber: phone_number,
     });
 
     console.log('PhonePe Donation Order Response:', JSON.stringify(orderResponse, null, 2));
 
-    // Update donation with PhonePe order details
+    if (!orderResponse.success) {
+      return NextResponse.json(
+        { error: 'Failed to create donation payment order', details: orderResponse.message },
+        { status: 500 }
+      );
+    }
+
+    // Update donation with payment state
     await donationRef.update({
-      phonepe_order_id: orderResponse.orderId,
-      payment_state: orderResponse.state,
+      payment_state: 'PENDING',
     });
 
     // Return redirect URL
@@ -84,7 +87,6 @@ export async function POST(request: NextRequest) {
       success: true,
       donation_id: donation_id,
       merchant_order_id: merchantOrderId,
-      order_id: orderResponse.orderId,
       payment_url: orderResponse.redirectUrl,
       message: 'Donation payment initiated successfully',
     });

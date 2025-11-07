@@ -1,14 +1,15 @@
-// PhonePe Standard Checkout Configuration and Utilities
+// PhonePe Payment Gateway Configuration and Utilities
+import crypto from 'crypto';
 
 // Validate required environment variables
-if (!process.env.PHONEPE_CLIENT_ID) {
-  throw new Error('PHONEPE_CLIENT_ID is not configured');
+if (!process.env.PHONEPE_MERCHANT_ID) {
+  throw new Error('PHONEPE_MERCHANT_ID is not configured');
 }
-if (!process.env.PHONEPE_CLIENT_VERSION) {
-  throw new Error('PHONEPE_CLIENT_VERSION is not configured');
+if (!process.env.PHONEPE_SALT_KEY) {
+  throw new Error('PHONEPE_SALT_KEY is not configured');
 }
-if (!process.env.PHONEPE_CLIENT_SECRET) {
-  throw new Error('PHONEPE_CLIENT_SECRET is not configured');
+if (!process.env.PHONEPE_SALT_INDEX) {
+  throw new Error('PHONEPE_SALT_INDEX is not configured');
 }
 if (!process.env.PHONEPE_BASE_URL) {
   throw new Error('PHONEPE_BASE_URL is not configured');
@@ -18,106 +19,140 @@ if (!process.env.NEXT_PUBLIC_URL) {
 }
 
 export const PHONEPE_CONFIG = {
-  CLIENT_ID: process.env.PHONEPE_CLIENT_ID,
-  CLIENT_VERSION: process.env.PHONEPE_CLIENT_VERSION,
-  CLIENT_SECRET: process.env.PHONEPE_CLIENT_SECRET,
+  MERCHANT_ID: process.env.PHONEPE_MERCHANT_ID,
+  SALT_KEY: process.env.PHONEPE_SALT_KEY,
+  SALT_INDEX: process.env.PHONEPE_SALT_INDEX,
   API_BASE_URL: process.env.PHONEPE_BASE_URL,
   REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/register/payment-callback',
   DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/donate/payment-callback',
 };
 
 /**
- * Generate Authorization Token for PhonePe Standard Checkout
+ * Generate X-VERIFY header for PhonePe API authentication
  */
-export async function getPhonePeAuthToken(): Promise<string> {
-  const tokenUrl = `${PHONEPE_CONFIG.API_BASE_URL}/v1/oauth/token`;
+function generateXVerifyHeader(payload: string): string {
+  const sha256Hash = crypto
+    .createHash('sha256')
+    .update(payload + '/pg/v1/pay' + PHONEPE_CONFIG.SALT_KEY)
+    .digest('hex');
   
-  const params = new URLSearchParams();
-  params.append('client_id', PHONEPE_CONFIG.CLIENT_ID);
-  params.append('client_version', PHONEPE_CONFIG.CLIENT_VERSION);
-  params.append('client_secret', PHONEPE_CONFIG.CLIENT_SECRET);
-  params.append('grant_type', 'client_credentials');
+  return `${sha256Hash}###${PHONEPE_CONFIG.SALT_INDEX}`;
+}
 
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to get PhonePe auth token');
-  }
-
-  const data = await response.json();
-  return data.access_token;
+/**
+ * Generate X-VERIFY header for status check
+ */
+function generateStatusXVerifyHeader(merchantTransactionId: string): string {
+  const endpoint = `/pg/v1/status/${PHONEPE_CONFIG.MERCHANT_ID}/${merchantTransactionId}`;
+  const sha256Hash = crypto
+    .createHash('sha256')
+    .update(endpoint + PHONEPE_CONFIG.SALT_KEY)
+    .digest('hex');
+  
+  return `${sha256Hash}###${PHONEPE_CONFIG.SALT_INDEX}`;
 }
 
 /**
  * Create PhonePe payment order
  */
-export async function createPhonePeOrder(authToken: string, orderData: {
+export async function createPhonePeOrder(orderData: {
   merchantOrderId: string;
   amount: number; // in paisa (1 rupee = 100 paise)
+  mobileNumber?: string;
 }) {
-  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/checkout/v2/pay`;
+  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/pay`;
   
   // Include merchantOrderId in redirect URL for reliable recovery
   const redirectUrl = `${PHONEPE_CONFIG.REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
+  const callbackUrl = `${PHONEPE_CONFIG.REDIRECT_URL_BASE}`;
   
   const payload = {
-    merchantOrderId: orderData.merchantOrderId,
+    merchantId: PHONEPE_CONFIG.MERCHANT_ID,
+    merchantTransactionId: orderData.merchantOrderId,
+    merchantUserId: `MUID${Date.now()}`,
     amount: orderData.amount,
-    expireAfter: 1200, // 20 minutes
-    paymentFlow: {
-      type: 'PG_CHECKOUT',
-      merchantUrls: {
-        redirectUrl,
-      },
+    redirectUrl: redirectUrl,
+    redirectMode: 'POST',
+    callbackUrl: callbackUrl,
+    mobileNumber: orderData.mobileNumber || '',
+    paymentInstrument: {
+      type: 'PAY_PAGE',
     },
   };
+
+  // Base64 encode the payload
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
+  
+  // Generate X-VERIFY header
+  const xVerify = generateXVerifyHeader(base64Payload);
+
+  console.log('PhonePe Payment Request:', {
+    merchantId: PHONEPE_CONFIG.MERCHANT_ID,
+    merchantTransactionId: orderData.merchantOrderId,
+    amount: orderData.amount,
+  });
 
   const response = await fetch(orderUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `O-Bearer ${authToken}`,
+      'X-VERIFY': xVerify,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      request: base64Payload,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.json();
+    console.error('PhonePe API Error:', error);
     throw new Error(`Failed to create PhonePe order: ${JSON.stringify(error)}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  
+  return {
+    success: result.success,
+    code: result.code,
+    message: result.message,
+    merchantTransactionId: orderData.merchantOrderId,
+    redirectUrl: result.data?.instrumentResponse?.redirectInfo?.url,
+  };
 }
 
 /**
  * Create PhonePe payment order for donations (separate callback URL)
  */
-export async function createPhonePeDonationOrder(authToken: string, orderData: {
+export async function createPhonePeDonationOrder(orderData: {
   merchantOrderId: string;
   amount: number; // in paisa (1 rupee = 100 paise)
+  mobileNumber?: string;
 }) {
-  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/checkout/v2/pay`;
+  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/pay`;
   
   // Use dedicated donation callback URL
   const redirectUrl = `${PHONEPE_CONFIG.DONATE_REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
+  const callbackUrl = `${PHONEPE_CONFIG.DONATE_REDIRECT_URL_BASE}`;
   
   const payload = {
-    merchantOrderId: orderData.merchantOrderId,
+    merchantId: PHONEPE_CONFIG.MERCHANT_ID,
+    merchantTransactionId: orderData.merchantOrderId,
+    merchantUserId: `MUID${Date.now()}`,
     amount: orderData.amount,
-    expireAfter: 1200, // 20 minutes
-    paymentFlow: {
-      type: 'PG_CHECKOUT',
-      merchantUrls: {
-        redirectUrl,
-      },
+    redirectUrl: redirectUrl,
+    redirectMode: 'POST',
+    callbackUrl: callbackUrl,
+    mobileNumber: orderData.mobileNumber || '',
+    paymentInstrument: {
+      type: 'PAY_PAGE',
     },
   };
+
+  // Base64 encode the payload
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
+  
+  // Generate X-VERIFY header
+  const xVerify = generateXVerifyHeader(base64Payload);
 
   console.log('Creating PhonePe donation order with redirect URL:', redirectUrl);
 
@@ -125,30 +160,45 @@ export async function createPhonePeDonationOrder(authToken: string, orderData: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `O-Bearer ${authToken}`,
+      'X-VERIFY': xVerify,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      request: base64Payload,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.json();
+    console.error('PhonePe Donation API Error:', error);
     throw new Error(`Failed to create PhonePe donation order: ${JSON.stringify(error)}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  
+  return {
+    success: result.success,
+    code: result.code,
+    message: result.message,
+    merchantTransactionId: orderData.merchantOrderId,
+    redirectUrl: result.data?.instrumentResponse?.redirectInfo?.url,
+  };
 }
 
 /**
- * Check payment status from PhonePe Standard Checkout
+ * Check payment status from PhonePe
  */
-export async function checkPhonePeOrderStatus(authToken: string, merchantOrderId: string) {
-  const statusUrl = `${PHONEPE_CONFIG.API_BASE_URL}/checkout/v2/order/${merchantOrderId}/status?details=false`;
+export async function checkPhonePeOrderStatus(merchantTransactionId: string) {
+  const statusUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/status/${PHONEPE_CONFIG.MERCHANT_ID}/${merchantTransactionId}`;
+  
+  // Generate X-VERIFY header for status check
+  const xVerify = generateStatusXVerifyHeader(merchantTransactionId);
 
   const response = await fetch(statusUrl, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `O-Bearer ${authToken}`,
+      'X-VERIFY': xVerify,
+      'X-MERCHANT-ID': PHONEPE_CONFIG.MERCHANT_ID,
     },
   });
 
