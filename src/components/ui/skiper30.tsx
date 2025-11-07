@@ -3,7 +3,7 @@
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
 import Lenis from "lenis";
 import { useEffect, useRef, useState } from "react";
-import UnicornBackground from "../home/unicorn/UnicornBackground";
+import YC26bgu from "../home/unicorn/YC26bgu";
 
 const images = [
   "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80",
@@ -16,9 +16,6 @@ const images = [
   "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80",
   "https://images.unsplash.com/photo-1522158637959-30385a09e0da?w=800&q=80",
   "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80",
-  "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80",
-  "https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=800&q=80",
-  "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=800&q=80",
 ];
 
 const About = () => {
@@ -31,10 +28,13 @@ const About = () => {
   });
 
   const { height } = dimension;
-  const y = useTransform(scrollYProgress, [0, 1], [0, height * 2]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, height * 3.3]);
-  const y3 = useTransform(scrollYProgress, [0, 1], [0, height * 1.25]);
-  const y4 = useTransform(scrollYProgress, [0, 1], [0, height * 3]);
+  const isMobile = dimension.width < 768;
+  
+  // Responsive parallax values based on screen size
+  const y = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1 : height * 2]);
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.3 : height * 3.3]);
+  const y3 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 0.8 : height * 1.25]);
+  const y4 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.2 : height * 3]);
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -58,44 +58,91 @@ const About = () => {
   }, []);
 
   return (
-    <section className="w-full bg-background text-foreground relative">
-                <div className="z-0">
-                <UnicornBackground/>
-
-                </div>
+    <section className="relative w-full text-foreground overflow-hidden">
+      {/* Vibrant gradient background matching poster - red to orange */}
+      <div className="absolute inset-0 z-0">
 
 
-      <div className="font-geist flex h-screen items-center justify-center gap-2 px-8 z-100">
+        {/* Electrifying radial glow overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
+        
+        {/* Additional depth with dark vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.2)_100%)]" />
+      </div>
 
-        <div className="absolute left-1/2 top-[3%] grid -translate-x-1/2 content-start justify-items-center gap-6 text-center max-w-4xl z-100">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">About YESCA</h2>
-          <p className="text-lg md:text-xl text-foreground leading-relaxed mb-4">
-            Since 1994, Youth Evangelistic Soldiers of Christian Assemblies (YESCA) has been empowering young people to live out their faith boldly. Through annual camps, discipleship programs, and community building, we&apos;ve shaped thousands of youth into strong Christian leaders.
-          </p>
-          <p className="text-lg md:text-xl text-foreground leading-relaxed">
-            For 30 years, we&apos;ve created a space where youth can grow spiritually, build lasting friendships, and discover their purpose in Christ. Our mission is to equip the next generation with biblical truth, authentic faith, and a passion for serving God.
-          </p>
-          <span className="relative mt-8 max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:from-foreground/20 after:to-foreground after:content-['']">
-            scroll to explore
-          </span>
+      {/* About content - no glass, direct text */}
+      <div className="relative flex flex-col items-center justify-center min-h-[90vh] px-6 py-24 text-center z-10">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#B8282D] via-[#D84A3F] to-[#F58649]" />
+        
+        {/* Visible Premium Grid Pattern with electrifying effect */}
+        <div className="absolute inset-0 opacity-40">
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+              maskImage: 'radial-gradient(ellipse at center, transparent 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.8) 70%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, transparent 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.8) 70%)'
+            }}
+          />
+        </div>
+        <div className="relative max-w-5xl mx-auto">
+          
+            
+            <h2 className="relative text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              About YESCA
+            </h2>
+            <p className="relative text-base md:text-lg lg:text-xl text-white/95 leading-relaxed mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+              Since 1994, Youth Evangelistic Soldiers of Christian Assemblies (YESCA)
+              has been empowering young people to live out their faith boldly. Through
+              annual camps, discipleship programs, and community building, we&apos;ve
+              shaped thousands of youth into strong Christian leaders.
+            </p>
+            <p className="relative text-base md:text-lg lg:text-xl text-white/95 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+              For 30 years, we&apos;ve created a space where youth can grow spiritually,
+              build lasting friendships, and discover their purpose in Christ. Our mission
+              is to equip the next generation with biblical truth, authentic faith, and
+              a passion for serving God.
+            </p>
+
+            <span className="relative mt-12 inline-block text-xs uppercase tracking-wider text-white/70 after:absolute after:left-1/2 after:-translate-x-1/2 after:top-full after:mt-4 after:h-16 after:w-px after:bg-gradient-to-b after:from-white/50 after:to-transparent after:content-['']">
+              scroll to explore
+            </span>
         </div>
       </div>
 
+      {/* Parallax Gallery */}
       <div
         ref={gallery}
-        className="relative box-border flex h-[175vh] gap-[2vw] overflow-hidden bg-foreground p-[2vw] z-100"
+        className="relative box-border flex h-[100vh] md:h-[125vh] lg:h-[175vh] gap-[2vw] overflow-hidden bg-foreground p-[2vw] z-10"
       >
         <Column images={[images[0], images[1], images[2]]} y={y} />
         <Column images={[images[3], images[4], images[5]]} y={y2} />
         <Column images={[images[6], images[7], images[8]]} y={y3} />
         <Column images={[images[6], images[7], images[8]]} y={y4} />
       </div>
-      <div className="font-geist relative flex h-screen items-center justify-center gap-2 px-8 z-100">
-        <div className="absolute left-1/2 top-[20%] grid -translate-x-1/2 content-start justify-items-center gap-6 text-center max-w-3xl">
-          <h3 className="text-3xl md:text-4xl font-bold mb-4">Join Us at YC26</h3>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Experience the next chapter of our journey at Youth Camp 2026. Be part of a transformative experience that has impacted generations of young believers. Register now and discover what God has in store for you.
-          </p>
+
+      {/* YC26 CTA Section */}
+      <div className="relative flex flex-col items-center justify-center h-[80vh] px-6 text-center bg-gradient-to-b from-[#FAF7F5] via-[#FAD9C1] to-white">
+        <h3 className="text-3xl md:text-4xl font-bold text-[#6B2429] mb-4">
+          Join Us at YC26
+        </h3>
+        <p className="text-base md:text-lg text-[#4C2A2A] max-w-2xl leading-relaxed mb-6">
+          Experience the next chapter of our journey at Youth Camp 2026. Be part of a
+          transformative experience that has impacted generations of young believers.
+          Register now and discover what God has in store for you.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <button className="px-8 py-3 rounded-xl text-white bg-[#8A1B1B] hover:bg-[#6B2429] transition shadow-md">
+            Register Now
+          </button>
+          <button className="px-8 py-3 rounded-xl border border-[#8A1B1B] text-[#8A1B1B] hover:bg-[#8A1B1B]/10 transition">
+            Explore Theme
+          </button>
         </div>
       </div>
     </section>
@@ -110,15 +157,22 @@ type ColumnProps = {
 const Column = ({ images, y }: ColumnProps) => {
   return (
     <motion.div
-      className="relative -top-[45%] flex h-full w-1/4 min-w-[250px] flex-col gap-[0.5vw] first:top-[-45%] [&:nth-child(2)]:top-[-95%] [&:nth-child(3)]:top-[-45%] [&:nth-child(4)]:top-[-75%]"
+      className="relative flex h-full flex-col gap-[0.5vw]
+      first:top-[-45%] md:w-1/4 md:min-w-[250px] w-1/2 min-w-[120px] sm:min-w-[180px]
+      nth-2:top-[-95%] md:nth-2:top-[-95%]
+      nth-3:top-[-45%] md:nth-3:top-[-45%]
+      nth-4:top-[-75%] md:nth-4:top-[-75%]"
       style={{ y }}
     >
       {images.map((src, i) => (
-        <div key={i} className="relative h-full w-full overflow-hidden ">
+        <div
+          key={i}
+          className="relative h-full w-full overflow-hidden rounded-lg md:rounded-2xl shadow-md md:shadow-lg"
+        >
           <img
-            src={`${src}`}
-            alt="image"
-            className="pointer-events-none object-cover w-full h-full"
+            src={src}
+            alt={`yesca-youth-${i}`}
+            className="pointer-events-none object-cover w-full h-full hover:scale-105 transition-transform duration-700"
           />
         </div>
       ))}
@@ -127,21 +181,3 @@ const Column = ({ images, y }: ColumnProps) => {
 };
 
 export { About };
-
-/**
- * Skiper 30 Parallax_002 — React + framer motion + lenis
- * Inspired by and adapted from https://www.siena.film/films/my-project-x
- * We respect the original creators. This is an inspired rebuild with our own taste and does not claim any ownership.
- * These animations aren’t associated with the siena.film . They’re independent recreations meant to study interaction design
- *
- * License & Usage:
- * - Free to use and modify in both personal and commercial projects.
- * - Attribution to Skiper UI is required when using the free version.
- * - No attribution required with Skiper UI Pro.
- *
- * Feedback and contributions are welcome.
- *
- * Author: @gurvinder-singh02
- * Website: https://gxuri.in
- * Twitter: https://x.com/Gur__vi
- */

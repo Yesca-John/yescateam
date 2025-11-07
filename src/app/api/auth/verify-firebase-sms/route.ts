@@ -40,10 +40,6 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Syncing Firebase SMS user to Firestore:', formattedPhone);
 
-    // For Firebase SMS, we need to create TWO docs:
-    // 1. users/{firebase_uid} -> for UID-based lookups
-    // 2. users/{phone_number} -> for phone-based lookups (consistency with WhatsApp)
-    
     // Check if member exists and get member_id
     const phoneWithoutCountryCode = formattedPhone.replace('+91', '');
     const membersRef = adminDb.collection('members');
@@ -56,46 +52,30 @@ export async function POST(request: NextRequest) {
     
     const memberId = !memberSnapshot.empty ? memberSnapshot.docs[0].id : null;
     
-    const userData = {
-      phone_number: formattedPhone,
-      firebase_uid: firebase_uid,
-      member_id: memberId,
-      last_login_at: timestamp,
-      verification_method: 'sms_firebase',
-      auth_provider: 'phone',
-    };
-    
     // Create/update user doc with Firebase UID as doc ID
-    const firebaseUidRef = adminDb.collection('users').doc(firebase_uid);
-    const firebaseUidDoc = await firebaseUidRef.get();
-    
-    if (!firebaseUidDoc.exists) {
-      await firebaseUidRef.set({
-        ...userData,
-        created_at: timestamp,
-      });
-    } else {
-      await firebaseUidRef.update({
-        last_login_at: timestamp,
-        member_id: memberId || firebaseUidDoc.data()?.member_id,
-      });
-    }
-    
-    // Also create/update user doc with phone number as doc ID (for consistency)
-    const userRef = adminDb.collection('users').doc(formattedPhone);
+    const userRef = adminDb.collection('users').doc(firebase_uid);
     const userDoc = await userRef.get();
-
+    
     if (!userDoc.exists) {
       await userRef.set({
-        ...userData,
+        phone_number: formattedPhone,
+        member_id: memberId,
         created_at: timestamp,
+        last_login_at: timestamp,
+        verification_method: 'sms_firebase',
+        auth_provider: 'phone',
       });
     } else {
-      await userRef.update({
-        firebase_uid: firebase_uid,
+      const updateData: Record<string, unknown> = {
         last_login_at: timestamp,
-        member_id: memberId || userDoc.data()?.member_id,
-      });
+        verification_method: 'sms_firebase',
+      };
+      
+      if (memberId && !userDoc.data()?.member_id) {
+        updateData.member_id = memberId;
+      }
+      
+      await userRef.update(updateData);
     }
 
     // Create audit log

@@ -23,6 +23,7 @@ export const PHONEPE_CONFIG = {
   CLIENT_SECRET: process.env.PHONEPE_CLIENT_SECRET,
   API_BASE_URL: process.env.PHONEPE_BASE_URL,
   REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/register/payment-callback',
+  DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/donate/payment-callback',
 };
 
 /**
@@ -89,6 +90,49 @@ export async function createPhonePeOrder(authToken: string, orderData: {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(`Failed to create PhonePe order: ${JSON.stringify(error)}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Create PhonePe payment order for donations (separate callback URL)
+ */
+export async function createPhonePeDonationOrder(authToken: string, orderData: {
+  merchantOrderId: string;
+  amount: number; // in paisa (1 rupee = 100 paise)
+}) {
+  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/checkout/v2/pay`;
+  
+  // Use dedicated donation callback URL
+  const redirectUrl = `${PHONEPE_CONFIG.DONATE_REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
+  
+  const payload = {
+    merchantOrderId: orderData.merchantOrderId,
+    amount: orderData.amount,
+    expireAfter: 1200, // 20 minutes
+    paymentFlow: {
+      type: 'PG_CHECKOUT',
+      merchantUrls: {
+        redirectUrl,
+      },
+    },
+  };
+
+  console.log('Creating PhonePe donation order with redirect URL:', redirectUrl);
+
+  const response = await fetch(orderUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `O-Bearer ${authToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Failed to create PhonePe donation order: ${JSON.stringify(error)}`);
   }
 
   return await response.json();

@@ -4,11 +4,87 @@ import { adminDb } from '@/lib/firebase/admin';
 import { registrationSchema } from '@/lib/validations/registration';
 import { generateTransactionId, getPhonePeAuthToken, createPhonePeOrder } from '@/lib/payment/phonepe';
 
+// Handle donation payment
+async function handleDonationPayment(body: {
+  donation_id: string;
+  amount: number;
+  phone_number: string;
+  name: string;
+}) {
+  const { donation_id, amount, phone_number, name } = body;
+
+  if (!donation_id || !amount || !phone_number || !name) {
+    return NextResponse.json(
+      { error: 'Missing required donation fields' },
+      { status: 400 }
+    );
+  }
+
+  // Verify donation exists
+  const donationRef = adminDb.collection('donations').doc(donation_id);
+  const donationDoc = await donationRef.get();
+
+  if (!donationDoc.exists) {
+    return NextResponse.json(
+      { error: 'Donation not found' },
+      { status: 404 }
+    );
+  }
+
+  const donationData = donationDoc.data();
+  
+  // Verify amount matches
+  if (donationData!.total_amount !== amount) {
+    return NextResponse.json(
+      { error: 'Amount mismatch' },
+      { status: 400 }
+    );
+  }
+
+  // Generate merchant order ID with DONATE prefix to distinguish from registrations
+  const merchantOrderId = `DONATE_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+
+  // Update donation with payment order ID
+  await donationRef.update({
+    merchant_order_id: merchantOrderId,
+    payment_initiated_at: Date.now(),
+  });
+
+  // Get PhonePe auth token
+  const authToken = await getPhonePeAuthToken();
+
+  // Create payment order
+  const orderResponse = await createPhonePeOrder(authToken, {
+    merchantOrderId,
+    amount: amount * 100, // Convert to paise
+  });
+
+  // Update donation with order ID
+  await donationRef.update({
+    phonepe_order_id: orderResponse.orderId,
+    payment_state: orderResponse.state,
+  });
+
+  return NextResponse.json({
+    success: true,
+    merchant_order_id: merchantOrderId,
+    order_id: orderResponse.orderId,
+    payment_url: orderResponse.redirectUrl,
+    message: 'Donation payment initiated successfully',
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const paymentType = body.type || 'registration'; // 'registration' or 'donation'
+
+    // Handle donation payments
+    if (paymentType === 'donation') {
+      return await handleDonationPayment(body);
+    }
     
-    // Validate form data
+    // Validate form data for registration
     const validationResult = registrationSchema.safeParse(body.formData);
     if (!validationResult.success) {
       return NextResponse.json(

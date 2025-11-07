@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { generateOTP, hashOTP, formatPhoneNumber, isValidIndianPhone } from '@/lib/auth/otp-utils';
+import { sendWhatsAppOTPWithTemplate } from '@/lib/whatsapp/send-otp';
 
-const MAX_OTP_REQUESTS_PER_HOUR = 3;
 const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function POST(request: NextRequest) {
@@ -79,25 +79,35 @@ export async function POST(request: NextRequest) {
 
     await otpRef.set(otpData);
 
-    // TODO: Send OTP via WhatsApp API (when Meta approval is ready)
-    // For now, in development, we'll return OTP in response
-    // In production, remove this and only send via WhatsApp
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    // Send OTP via WhatsApp API using TEMPLATE (more reliable)
+    console.log(`📱 Sending WhatsApp OTP to ${formattedPhone}...`);
+    
+    const whatsappResult = await sendWhatsAppOTPWithTemplate(formattedPhone, otp);
 
-    if (isDevelopment) {
-      console.log(`🔐 OTP for ${formattedPhone}: ${otp}`);
+    if (!whatsappResult.success) {
+      console.error('Failed to send WhatsApp OTP:', whatsappResult.error);
+      
+      // Delete the OTP record if WhatsApp sending failed
+      await otpRef.delete();
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to send OTP via WhatsApp',
+          details: whatsappResult.error,
+          suggestion: 'Please try SMS instead or contact support'
+        },
+        { status: 500 }
+      );
     }
 
-    // TODO: Uncomment when WhatsApp API is ready
-    // await sendWhatsAppOTP(formattedPhone, otp);
+    console.log(`✅ WhatsApp OTP sent successfully! Message ID: ${whatsappResult.messageId}`);
 
     return NextResponse.json({
       success: true,
       message: 'OTP sent via WhatsApp',
       phone_number: formattedPhone,
       expires_in: OTP_EXPIRY_MS / 1000, // seconds
-      // Remove this in production:
-      ...(isDevelopment && { otp_dev_only: otp }),
+      message_id: whatsappResult.messageId,
     });
 
   } catch (error) {

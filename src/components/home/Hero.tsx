@@ -4,19 +4,19 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import Carousel3D from './Carousel3D'
-import UnicornBackground from './unicorn/UnicornBackground'
+// import UnicornBackground from './unicorn/UnicornBackground'
 import { Button } from '@/components/ui/button'
+import YC26bgu from './unicorn/YC26bgu';
 
 const Hero = () => {
   return (
-    <section className="relative w-full min-h-screen text-foreground overflow-hidden transition-colors duration-300">
+    <section className="relative w-full min-h-screen text-foreground overflow-hidden transition-colors duration-300 pb-12">
       {/* Unicorn Studio Gradient Background Component - Only for Hero */}
-      <div className="absolute inset-0 z-0">
-        <UnicornBackground/>
-      </div>
+
+      <YC26bgu />
 
       {/* Hero Content */}
-      <div className="relative z-10 w-full min-h-screen pb-8">
+      <div className="relative z-10 w-full min-h-screen pb-">
         <div className="flex flex-col items-center justify-center min-h-screen px-5 py-5 text-center relative lg:px-20 lg:py-5">
           {/* YESCA Logo */}
           <div className="mb-5 drop-shadow-[0_0_20px_rgba(var(--foreground)/0.3)] lg:mb-5">
@@ -56,7 +56,7 @@ const Hero = () => {
           </div>
 
           {/* 3D Carousel */}
-          <div className="w-full my-8 flex justify-center items-center md:my-10 lg:my-15">
+          <div className="w-full my-8 flex justify-center items-center md:my-10 lg:my-15 z-50">
             <Carousel3D />
           </div>
 
