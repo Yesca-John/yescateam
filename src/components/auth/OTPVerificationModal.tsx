@@ -34,8 +34,8 @@ export function OTPVerificationModal({
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
   const [canResend, setCanResend] = useState(false);
-  const [method, setMethod] = useState<"whatsapp" | "sms">("whatsapp");
-  const [isWaitingForFirebaseSMS, setIsWaitingForFirebaseSMS] = useState(false);
+  const [method, setMethod] = useState<"whatsapp" | "sms">("sms");
+  const [isWaitingForFirebaseSMS, setIsWaitingForFirebaseSMS] = useState(true);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Timer countdown
@@ -374,6 +374,27 @@ export function OTPVerificationModal({
                 </>
               )}
             </Button>
+
+            {method === "sms" && (
+              <Button
+                variant="outline"
+                onClick={handleResend}
+                disabled={!canResend || isSending}
+                className="w-full"
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Resend SMS OTP
+                  </>
+                )}
+              </Button>
+            )}
 
             {method === "whatsapp" && (
               <Button

@@ -143,7 +143,7 @@ export function DonateTicketForm() {
     try {
       const formattedPhone = `+91${formData.phone_number}`;
       
-      const response = await fetch("/api/auth/send-otp-whatsapp", {
+      const response = await fetch("/api/auth/send-otp-sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone_number: formattedPhone }),

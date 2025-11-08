@@ -41,7 +41,7 @@ export default function SignInPage() {
       }
 
       // Send OTP via WhatsApp
-      const response = await fetch('/api/auth/send-otp-whatsapp', {
+      const response = await fetch('/api/auth/send-otp-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number: `+91${phoneNumber}` }),

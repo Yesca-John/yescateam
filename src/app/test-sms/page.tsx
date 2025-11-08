@@ -25,7 +25,7 @@ export default function TestSMSPage() {
         ? phoneNumber
         : `+91${phoneNumber}`;
 
-      const response = await fetch("/api/auth/send-otp-whatsapp", {
+      const response = await fetch("/api/auth/send-otp-sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone_number: formattedPhone }),
@@ -37,7 +37,7 @@ export default function TestSMSPage() {
         throw new Error(data.error || "Failed to send OTP");
       }
 
-      console.log("✅ WhatsApp OTP sent:", data);
+      console.log("✅ SMS OTP sent:", data);
       if (data.otp_dev_only) {
         console.log("🔑 OTP (DEV MODE):", data.otp_dev_only);
       }
@@ -128,15 +128,15 @@ export default function TestSMSPage() {
                   ) : (
                     <>
                       <MessageSquare className="mr-2 h-5 w-5" />
-                      Send WhatsApp OTP
+                      Send SMS OTP
                     </>
                   )}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Primary method: WhatsApp
+                  Primary method: SMS via Firebase
                   <br />
-                  SMS fallback available in the modal
+                  WhatsApp temporarily disabled
                 </p>
               </div>
 
@@ -147,8 +147,8 @@ export default function TestSMSPage() {
                 </h4>
                 <ol className="text-xs space-y-1 text-muted-foreground">
                   <li>1. Enter your phone number</li>
-                  <li>2. Click &#34;Send WhatsApp OTP&#34; (or choose SMS in modal)</li>
-                  <li>3. Receive 6-digit code via WhatsApp/SMS</li>
+                  <li>2. Click &#34;Send SMS OTP&#34;</li>
+                  <li>3. Receive 6-digit code via SMS</li>
                   <li>4. Enter code to verify</li>
                   <li>5. Get authenticated with Firebase ✅</li>
                 </ol>
