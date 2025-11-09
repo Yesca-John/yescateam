@@ -23,8 +23,8 @@ export const PHONEPE_CONFIG = {
   SALT_KEY: process.env.PHONEPE_SALT_KEY,
   SALT_INDEX: process.env.PHONEPE_SALT_INDEX,
   API_BASE_URL: process.env.PHONEPE_BASE_URL,
-  REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/register/payment-callback',
-  DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/donate/payment-callback',
+  REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/callback',
+  DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/donate/callback',
 };
 
 /**
