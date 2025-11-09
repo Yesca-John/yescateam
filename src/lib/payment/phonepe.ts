@@ -23,8 +23,10 @@ export const PHONEPE_CONFIG = {
   SALT_KEY: process.env.PHONEPE_SALT_KEY,
   SALT_INDEX: process.env.PHONEPE_SALT_INDEX,
   API_BASE_URL: process.env.PHONEPE_BASE_URL,
-  REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/callback',
-  DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/donate/callback',
+  REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/register/payment-callback',
+  CALLBACK_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/callback',
+  DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/donate/payment-callback',
+  DONATE_CALLBACK_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/donate/callback',
 };
 
 /**
@@ -62,9 +64,8 @@ export async function createPhonePeOrder(orderData: {
 }) {
   const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/pay`;
   
-  // Include merchantOrderId in redirect URL for reliable recovery
   const redirectUrl = `${PHONEPE_CONFIG.REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
-  const callbackUrl = `${PHONEPE_CONFIG.REDIRECT_URL_BASE}`;
+  const callbackUrl = PHONEPE_CONFIG.CALLBACK_URL_BASE;
   
   const payload = {
     merchantId: PHONEPE_CONFIG.MERCHANT_ID,
@@ -72,7 +73,6 @@ export async function createPhonePeOrder(orderData: {
     merchantUserId: `MUID${Date.now()}`,
     amount: orderData.amount,
     redirectUrl: redirectUrl,
-    redirectMode: 'POST',
     callbackUrl: callbackUrl,
     mobileNumber: orderData.mobileNumber || '',
     paymentInstrument: {
@@ -80,17 +80,8 @@ export async function createPhonePeOrder(orderData: {
     },
   };
 
-  // Base64 encode the payload
   const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
-  
-  // Generate X-VERIFY header
   const xVerify = generateXVerifyHeader(base64Payload);
-
-  console.log('PhonePe Payment Request:', {
-    merchantId: PHONEPE_CONFIG.MERCHANT_ID,
-    merchantTransactionId: orderData.merchantOrderId,
-    amount: orderData.amount,
-  });
 
   const response = await fetch(orderUrl, {
     method: 'POST',
@@ -130,9 +121,8 @@ export async function createPhonePeDonationOrder(orderData: {
 }) {
   const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/pay`;
   
-  // Use dedicated donation callback URL
   const redirectUrl = `${PHONEPE_CONFIG.DONATE_REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
-  const callbackUrl = `${PHONEPE_CONFIG.DONATE_REDIRECT_URL_BASE}`;
+  const callbackUrl = PHONEPE_CONFIG.DONATE_CALLBACK_URL_BASE;
   
   const payload = {
     merchantId: PHONEPE_CONFIG.MERCHANT_ID,
@@ -140,7 +130,6 @@ export async function createPhonePeDonationOrder(orderData: {
     merchantUserId: `MUID${Date.now()}`,
     amount: orderData.amount,
     redirectUrl: redirectUrl,
-    redirectMode: 'POST',
     callbackUrl: callbackUrl,
     mobileNumber: orderData.mobileNumber || '',
     paymentInstrument: {
@@ -148,13 +137,8 @@ export async function createPhonePeDonationOrder(orderData: {
     },
   };
 
-  // Base64 encode the payload
   const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
-  
-  // Generate X-VERIFY header
   const xVerify = generateXVerifyHeader(base64Payload);
-
-  console.log('Creating PhonePe donation order with redirect URL:', redirectUrl);
 
   const response = await fetch(orderUrl, {
     method: 'POST',
