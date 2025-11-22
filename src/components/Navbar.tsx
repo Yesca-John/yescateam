@@ -97,6 +97,8 @@ export function Navbar() {
               </span>
             </Link>
 
+            
+
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
               {navLinks.map((link) => (
@@ -109,6 +111,8 @@ export function Navbar() {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 group-hover:w-full transition-all duration-300"></span>
                 </Link>
               ))}
+
+
             </div>
 
             {/* Right Side - Desktop */}

@@ -4,6 +4,8 @@ import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
 import Lenis from "lenis";
 import { useEffect, useRef, useState } from "react";
 import YC26bgu from "../home/unicorn/YC26bgu";
+import Hero from "@/components/home/Hero";
+import YC26 from "@/components/home/YC26";
 
 const images = [
   "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80",
@@ -19,46 +21,48 @@ const images = [
 ];
 
 const About = () => {
-  const gallery = useRef<HTMLDivElement>(null);
-  const [dimension, setDimension] = useState({ width: 0, height: 0 });
+  // Parallax gallery temporarily disabled
+  // const gallery = useRef<HTMLDivElement>(null);
+  // const [dimension, setDimension] = useState({ width: 0, height: 0 });
 
-  const { scrollYProgress } = useScroll({
-    target: gallery,
-    offset: ["start end", "end start"],
-  });
+  // const { scrollYProgress } = useScroll({
+  //   target: gallery,
+  //   offset: ["start end", "end start"],
+  // });
 
-  const { height } = dimension;
-  const isMobile = dimension.width < 768;
+  // const { height } = dimension;
+  // const isMobile = dimension.width < 768;
   
   // Responsive parallax values based on screen size
-  const y = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1 : height * 2]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.3 : height * 3.3]);
-  const y3 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 0.8 : height * 1.25]);
-  const y4 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.2 : height * 3]);
+  // const y = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1 : height * 2]);
+  // const y2 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.3 : height * 3.3]);
+  // const y3 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 0.8 : height * 1.25]);
+  // const y4 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? height * 1.2 : height * 3]);
 
-  useEffect(() => {
-    const lenis = new Lenis();
+  // useEffect(() => {
+  //   const lenis = new Lenis();
 
-    const raf = (time: number) => {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    };
+  //   const raf = (time: number) => {
+  //     lenis.raf(time);
+  //     requestAnimationFrame(raf);
+  //   };
 
-    const resize = () => {
-      setDimension({ width: window.innerWidth, height: window.innerHeight });
-    };
+  //   const resize = () => {
+  //     setDimension({ width: window.innerWidth, height: window.innerHeight });
+  //   };
 
-    window.addEventListener("resize", resize);
-    requestAnimationFrame(raf);
-    resize();
+  //   window.addEventListener("resize", resize);
+  //   requestAnimationFrame(raf);
+  //   resize();
 
-    return () => {
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("resize", resize);
+  //     lenis.destroy();
+  //   };
+  // }, []);
 
   return (
-    <section className="relative w-full text-foreground overflow-hidden">
+    <section className="relative w-full text-foreground overflow-x-clip">
       {/* Vibrant gradient background matching poster - red to orange */}
       <div className="absolute inset-0 z-0">
 
@@ -114,8 +118,8 @@ const About = () => {
         </div>
       </div>
 
-      {/* Parallax Gallery */}
-      <div
+      {/* Parallax Gallery - TEMPORARILY DISABLED */}
+      {/* <div
         ref={gallery}
         className="relative box-border flex h-[100vh] md:h-[125vh] lg:h-[175vh] gap-[2vw] overflow-hidden bg-foreground p-[2vw] z-10"
       >
@@ -123,28 +127,29 @@ const About = () => {
         <Column images={[images[3], images[4], images[5]]} y={y2} />
         <Column images={[images[6], images[7], images[8]]} y={y3} />
         <Column images={[images[6], images[7], images[8]]} y={y4} />
-      </div>
+      </div> */}
 
       {/* YC26 CTA Section */}
-      <div className="relative flex flex-col items-center justify-center h-[80vh] px-6 text-center bg-gradient-to-b from-[#FAF7F5] via-[#FAD9C1] to-white">
-        <h3 className="text-3xl md:text-4xl font-bold text-[#6B2429] mb-4">
-          Join Us at YC26
-        </h3>
-        <p className="text-base md:text-lg text-[#4C2A2A] max-w-2xl leading-relaxed mb-6">
-          Experience the next chapter of our journey at Youth Camp 2026. Be part of a
-          transformative experience that has impacted generations of young believers.
-          Register now and discover what God has in store for you.
-        </p>
+        <div className="absolute inset-0 z-0">
 
-        <div className="flex flex-wrap justify-center gap-4 mt-4">
-          <button className="px-8 py-3 rounded-xl text-white bg-[#8A1B1B] hover:bg-[#6B2429] transition shadow-md">
-            Register Now
-          </button>
-          <button className="px-8 py-3 rounded-xl border border-[#8A1B1B] text-[#8A1B1B] hover:bg-[#8A1B1B]/10 transition">
-            Explore Theme
-          </button>
+
+            {/* Electrifying radial glow overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
+
+            {/* Additional depth with dark vignette */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.2)_100%)]" />
         </div>
-      </div>
+
+        {/* About content - no glass, direct text */}
+        <div className="relative flex flex-col items-center justify-center min-h-[90vh] text-center z-10">
+            {/* Background removed from here to be added in FreedomAnimation */}
+            <div className="relative w-screen">
+
+                <YC26/>
+
+
+            </div>
+        </div>
     </section>
   );
 };

@@ -10,13 +10,13 @@ import YC26bgu from './unicorn/YC26bgu';
 
 const Hero = () => {
   return (
-    <section className="relative w-full min-h-screen text-foreground overflow-hidden transition-colors duration-300 pb-12">
+    <section className="relative w-full min-h-screen text-foreground overflow-hidden transition-colors duration-300 pb-12 -mt-[70px]">
       {/* Unicorn Studio Gradient Background Component - Only for Hero */}
 
       <YC26bgu />
 
       {/* Hero Content */}
-      <div className="relative z-10 w-full min-h-screen pb-">
+      <div className="relative z-10 w-full min-h-screen dark">
         <div className="flex flex-col items-center justify-center min-h-screen px-5 py-5 text-center relative lg:px-20 lg:py-5">
           {/* YESCA Logo */}
           <div className="mb-5 drop-shadow-[0_0_20px_rgba(var(--foreground)/0.3)] lg:mb-5">
@@ -31,12 +31,12 @@ const Hero = () => {
           </div>
 
           {/* Organization Name */}
-          <div className="text-xs font-light text-muted-foreground tracking-[3px] mb-0 uppercase opacity-100 leading-relaxed md:text-sm md:tracking-[2px] md:mb-0 lg:text-base lg:mb-0">
+          <div className="text-xs font-light text-white/80 tracking-[3px] mb-0 uppercase opacity-100 leading-relaxed md:text-sm md:tracking-[2px] md:mb-0 lg:text-base lg:mb-0">
             YOUTH EVANGELISTIC SOLDIERS OF CHRISTIAN ASSEMBLIES
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl text-foreground my-2 leading-normal drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] pacifico-font tracking-wide md:text-5xl md:my-2 lg:text-7xl lg:my-10 lg:mb-10 xl:text-[86px]">
+          <h1 className="text-4xl text-[#e1e1e1] my-2 leading-normal drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] pacifico-font tracking-wide md:text-5xl md:my-2 lg:text-7xl lg:my-10 lg:mb-10 xl:text-[86px]">
             Empowering 
   Youth in Christ
           </h1>

@@ -8,6 +8,10 @@ import Hero from '@/components/home/Hero'
 import { About } from '@/components/ui/skiper30'
 import YC26bgu from '@/components/home/unicorn/YC26bgu';
 import YouthCamps from '@/components/home/YouthCamps';
+import CampCountdown from '@/components/home/CampCountdown';
+import RegistrationSection from '@/components/home/RegistrationSection';
+import CampDetails from '@/components/home/CampDetails';
+import Footer from '@/components/home/Footer';
 
 // import Link from 'next/link'
 // import { Button } from '@/components/ui/button'
@@ -23,7 +27,11 @@ const page = () => {
 
       {/* About Section with Parallax Gallery */}
       <About />
-      <YouthCamps />
+      <CampCountdown />
+      <RegistrationSection />
+      <CampDetails />
+      {/* <YouthCamps /> */}
+      <Footer />
 
  
     </>
