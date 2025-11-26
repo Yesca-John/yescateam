@@ -12,19 +12,17 @@ interface WhatsAppConfirmationResponse {
 
 /**
  * Send registration confirmation via WhatsApp Template
- * Template: "Praise the Lord! Your Youthcamp 2026 registration is confirmed..."
+ * Template: "Your Youth camp 2026 registration is Successful..."
  * 
  * @param phoneNumber - Phone number in E.164 format (+919876543210)
  * @param userName - Full name of the registered user
- * @param memberId - Member ID (e.g., YC26_001234)
- * @param loginUrl - Login URL for the user
+ * @param memberId - Member ID (e.g., YESCA0001)
  * @returns Promise with success status and message ID
  */
 export async function sendRegistrationConfirmation(
   phoneNumber: string,
   userName: string,
-  memberId: string,
-  loginUrl: string = process.env.NEXT_PUBLIC_URL || 'https://yescateam.com/login'
+  memberId: string
 ): Promise<WhatsAppConfirmationResponse> {
   try {
     if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
@@ -42,10 +40,11 @@ export async function sendRegistrationConfirmation(
     const apiUrl = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
 
     // Template payload
-    // Template variables:
-    // {{1}} = User Name
-    // {{2}} = Member ID
-    // {{3}} = Login URL
+    // New simplified template:
+    // "Your Youth camp 2026 registration is Successful.
+    //  Name: {{1}}
+    //  Member ID: {{2}}
+    //  YESCA TEAM"
     const payload = {
       messaging_product: 'whatsapp',
       to: formattedPhone,
@@ -66,10 +65,6 @@ export async function sendRegistrationConfirmation(
               {
                 type: 'text',
                 text: memberId, // {{2}}
-              },
-              {
-                type: 'text',
-                text: loginUrl, // {{3}}
               },
             ],
           },
