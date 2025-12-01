@@ -18,28 +18,28 @@ const plans = [
     active: true
   },
   {
-    name: "Kids Registration",
-    nameTelugu: "కిడ్స్ రిజిస్ట్రేషన్ ఫీజ్",
-    price: "100",
-    description: "Coming Soon",
-    descriptionTelugu: "త్వరలో వస్తుంది",
-    buttonGradient: "from-[#E67E3A] to-[#F5A623]", // Orange to Yellow
-    borderColor: "border-[#FFD700]",
-    delay: 0.1,
-    href: "#",
-    active: false
-  },
-  {
     name: "Faithbox Registration",
     nameTelugu: "ఫెయిత్ బాక్స్ కలిగిన వారి రిజిస్ట్రేషన్ ఫీజ్",
     price: "50",
     description: "Click the button below",
     descriptionTelugu: "ఈ క్రింది బటన్ క్లిక్ చేయండి",
+    buttonGradient: "from-[#E67E3A] to-[#F5A623]", // Orange to Yellow
+    borderColor: "border-[#FFD700]",
+    delay: 0.1,
+    href: "/register?type=faithbox",
+    active: true
+  },
+  {
+    name: "Kids Registration",
+    nameTelugu: "కిడ్స్ రిజిస్ట్రేషన్ ఫీజ్",
+    price: "100",
+    description: "Coming Soon",
+    descriptionTelugu: "త్వరలో వస్తుంది",
     buttonGradient: "from-[#F5A623] to-[#FFA500]", // Yellow to Gold
     borderColor: "border-[#FFD700]",
     delay: 0.2,
-    href: "/register?type=faithbox",
-    active: true
+    href: "#",
+    active: false
   },
 ];
 

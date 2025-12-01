@@ -22,7 +22,7 @@ const registrationSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
   phone_number: z.string().regex(/^[6-9]\d{9}$/, 'Enter valid 10-digit mobile number'),
   gender: z.enum(['M', 'F'], { message: 'Please select gender' }),
-  age: z.number().min(1, 'Age must be at least 1').max(100, 'Age must be less than 100'),
+  age: z.number().min(15, 'Age must be at least 15 years').max(40, 'Age must not exceed 40 years'),
   dob: z.string().optional(),
   believer: z.enum(['yes', 'no'], { message: 'Please select believer status' }),
   church_name: z.string().min(2, 'Church name is required'),
