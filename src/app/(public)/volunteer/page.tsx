@@ -184,15 +184,15 @@ export default function VolunteerRegistrationPage() {
                     id="age"
                     type="number"
                     placeholder="Enter your age"
-                    min={16}
-                    max={60}
+                    min={40}
+                    max={100}
                     {...register('age')}
                     className={errors.age ? 'border-red-500' : ''}
                   />
                   {errors.age && (
                     <p className="text-sm text-red-500">{errors.age.message}</p>
                   )}
-                  <p className="text-xs text-gray-500">Must be between 16 and 60 years old</p>
+                  <p className="text-xs text-gray-500">Must be 40 years or older</p>
                 </div>
 
                 {/* Church Name */}
