@@ -1,7 +1,7 @@
 // Volunteer Registration API - Payment Initiation
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
-import { createPhonePeOrder } from '@/lib/payment/phonepe';
+import { createPhonePeVolunteerOrder } from '@/lib/payment/phonepe';
 import { z } from 'zod';
 
 // Volunteer registration schema
@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating PhonePe order for volunteer registration...');
     
-    // Create payment order
-    const orderResponse = await createPhonePeOrder({
+    // Create payment order using volunteer-specific callback
+    const orderResponse = await createPhonePeVolunteerOrder({
       merchantOrderId,
       amount: amount * 100, // Convert to paise
       mobileNumber: formData.phone_number,

@@ -21,7 +21,7 @@ import { PriceSelector } from '@/components/registration/PriceSelector';
 const volunteerSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
   phone_number: z.string().regex(/^[6-9]\d{9}$/, 'Invalid phone number'),
-  age: z.coerce.number().min(16, 'Must be at least 16 years old').max(60, 'Must be under 60 years old'),
+  age: z.coerce.number().min(40, 'Must be at least 40 years old').max(100, 'Must be under 100 years old'),
   church_name: z.string().min(2, 'Church name is required'),
   address: z.string().min(5, 'Address must be at least 5 characters'),
 });

@@ -27,6 +27,8 @@ export const PHONEPE_CONFIG = {
   CALLBACK_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/callback',
   DONATE_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/donate/payment-callback',
   DONATE_CALLBACK_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/donate/callback',
+  VOLUNTEER_REDIRECT_URL_BASE: process.env.NEXT_PUBLIC_URL + '/volunteer/payment-callback',
+  VOLUNTEER_CALLBACK_URL_BASE: process.env.NEXT_PUBLIC_URL + '/api/payment/callback',
 };
 
 /**
@@ -155,6 +157,63 @@ export async function createPhonePeDonationOrder(orderData: {
     const error = await response.json();
     console.error('PhonePe Donation API Error:', error);
     throw new Error(`Failed to create PhonePe donation order: ${JSON.stringify(error)}`);
+  }
+
+  const result = await response.json();
+  
+  return {
+    success: result.success,
+    code: result.code,
+    message: result.message,
+    merchantTransactionId: orderData.merchantOrderId,
+    redirectUrl: result.data?.instrumentResponse?.redirectInfo?.url,
+  };
+}
+
+/**
+ * Create PhonePe payment order for volunteer registration (separate callback URL)
+ */
+export async function createPhonePeVolunteerOrder(orderData: {
+  merchantOrderId: string;
+  amount: number; // in paisa (1 rupee = 100 paise)
+  mobileNumber?: string;
+}) {
+  const orderUrl = `${PHONEPE_CONFIG.API_BASE_URL}/pg/v1/pay`;
+  
+  const redirectUrl = `${PHONEPE_CONFIG.VOLUNTEER_REDIRECT_URL_BASE}?from=phonepe&merchantOrderId=${orderData.merchantOrderId}`;
+  const callbackUrl = PHONEPE_CONFIG.VOLUNTEER_CALLBACK_URL_BASE;
+  
+  const payload = {
+    merchantId: PHONEPE_CONFIG.MERCHANT_ID,
+    merchantTransactionId: orderData.merchantOrderId,
+    merchantUserId: `MUID${Date.now()}`,
+    amount: orderData.amount,
+    redirectUrl: redirectUrl,
+    callbackUrl: callbackUrl,
+    mobileNumber: orderData.mobileNumber || '',
+    paymentInstrument: {
+      type: 'PAY_PAGE',
+    },
+  };
+
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
+  const xVerify = generateXVerifyHeader(base64Payload);
+
+  const response = await fetch(orderUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-VERIFY': xVerify,
+    },
+    body: JSON.stringify({
+      request: base64Payload,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error('PhonePe Volunteer API Error:', error);
+    throw new Error(`Failed to create PhonePe volunteer order: ${JSON.stringify(error)}`);
   }
 
   const result = await response.json();

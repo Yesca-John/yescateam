@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     console.log('Decoded PhonePe response:', decodedResponse);
     
     const transactionId = decodedResponse.data?.merchantTransactionId;
-    const paymentStatus = decodedResponse.code;
+    let paymentStatus = decodedResponse.code;
     
     if (!transactionId) {
       console.error('Transaction ID missing from response');
@@ -41,7 +41,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Payment status for ${transactionId}: ${paymentStatus}`);
+    console.log(`Initial payment status for ${transactionId}: ${paymentStatus}`);
+
+    // If status is UNKNOWN or not PAYMENT_SUCCESS, verify with PhonePe API
+    if (paymentStatus !== 'PAYMENT_SUCCESS') {
+      console.log('Status not success, checking with PhonePe API...');
+      
+      // Wait a moment for PhonePe to process the payment
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        const statusCheck = await checkPhonePeOrderStatus(transactionId);
+        console.log('PhonePe status check response:', JSON.stringify(statusCheck));
+        
+        if (statusCheck.success && statusCheck.code === 'PAYMENT_SUCCESS') {
+          paymentStatus = 'PAYMENT_SUCCESS';
+          console.log('Payment confirmed successful via API check');
+        } else if (statusCheck.code) {
+          paymentStatus = statusCheck.code;
+          console.log('Updated status from API:', paymentStatus);
+        }
+      } catch (statusError) {
+        console.error('Error checking payment status:', statusError);
+        // Continue with original status if API check fails
+      }
+    }
+
+    console.log(`Final payment status for ${transactionId}: ${paymentStatus}`);
 
     // Check payment type by transaction ID prefix
     const isDonation = transactionId.startsWith('DONATE_');
@@ -134,7 +160,7 @@ export async function POST(request: NextRequest) {
       const currentVolunteerCounter = counters.yc26VolunteerCounter || 0;
       const newVolunteerCounter = currentVolunteerCounter + 1;
 
-      const volunteerId = `VOL_${String(newVolunteerCounter).padStart(4, '0')}`;
+      const volunteerId = `VOL${String(newVolunteerCounter).padStart(2, '0')}`;
       const timestamp = new Date().toISOString();
 
       // Create volunteer document
