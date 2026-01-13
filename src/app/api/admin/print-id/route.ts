@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
         updated_at: timestamp,
       };
 
-      // Only update faithbox status if it's a faithbox registration
-      if (collected_faithbox !== undefined && collected_faithbox !== null) {
+      // Only update faithbox status if it's a faithbox registration AND faithbox data is provided
+      if (regData.registration_type === 'faithbox' && collected_faithbox !== undefined && collected_faithbox !== null) {
         updateData.collected_faithbox = collected_faithbox;
         if (collected_faithbox) {
           updateData.faithbox_collected_at = timestamp;
@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
         updated_at: timestamp,
       };
 
-      // Only update faithbox status if provided and it's a faithbox registration
-      if (collected_faithbox !== undefined && collected_faithbox !== null) {
+      // Only update faithbox status if it's a faithbox registration AND faithbox data is provided
+      if (regData.registration_type === 'faithbox' && collected_faithbox !== undefined && collected_faithbox !== null) {
         updateData.collected_faithbox = collected_faithbox;
         if (collected_faithbox) {
           updateData.faithbox_collected_at = timestamp;
