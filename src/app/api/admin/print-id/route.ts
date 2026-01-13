@@ -129,18 +129,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Create audit log
+    const auditDetails: any = {
+      group_name: autoAssignedGroup,
+      attended_number: attendedNumber,
+      is_regenerate: isRegenerate,
+    };
+
+    // Only include collected_faithbox if it's not undefined
+    if (collected_faithbox !== undefined) {
+      auditDetails.collected_faithbox = collected_faithbox;
+    }
+
     await adminDb.collection('audit_logs').add({
       action: isRegenerate ? 'id_card_regenerated' : 'id_card_generated',
       resource_type: 'registration',
       resource_id: registration_id,
       actor_type: 'admin',
       actor_id: 'front_desk', // TODO: Get actual user ID from auth
-      details: {
-        group_name: autoAssignedGroup,
-        attended_number: attendedNumber,
-        collected_faithbox,
-        is_regenerate: isRegenerate,
-      },
+      details: auditDetails,
       timestamp,
     });
 

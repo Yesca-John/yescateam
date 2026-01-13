@@ -149,9 +149,10 @@ export default function FrontdeskRegistrationsPage() {
         }
       });
       
-      // Fetch gender from member documents for registrations missing gender
+      // Fetch gender from member documents for registrations missing gender - IN PARALLEL
       if (registrationsWithMissingGender.length > 0) {
-        for (const { data, docId } of registrationsWithMissingGender) {
+        // Fetch all members in parallel using Promise.all
+        const memberFetches = registrationsWithMissingGender.map(async ({ data, docId }) => {
           let gender: 'M' | 'F' = 'M'; // Default fallback
           
           if (data.member_id) {
@@ -168,7 +169,7 @@ export default function FrontdeskRegistrationsPage() {
             }
           }
           
-          regs.push({
+          return {
             registration_id: docId,
             member_id: data.member_id || '',
             full_name: data.full_name || '',
@@ -182,8 +183,12 @@ export default function FrontdeskRegistrationsPage() {
             yc26_attended_number: data.yc26_attended_number,
             registration_date: data.registration_date,
             collected_faithbox: data.collected_faithbox ?? null,
-          });
-        }
+          };
+        });
+        
+        // Wait for all fetches to complete in parallel
+        const fetchedRegs = await Promise.all(memberFetches);
+        regs.push(...fetchedRegs);
       }
       
       setRegistrations(regs);
