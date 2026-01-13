@@ -73,8 +73,20 @@ service cloud.firestore {
       
       // Games Sub-collection
       match /games/{gameId} {
-        allow read: if true; // Public read
+        allow read: if true; // Public read for leaderboards
         allow write: if isAdmin();
+        
+        // Teams Sub-collection
+        match /teams/{teamName} {
+          allow read: if true; // Public read for live leaderboards
+          allow write: if isAdmin();
+          
+          // Answers Sub-collection
+          match /answers/{questionNumber} {
+            allow read: if true; // Public read
+            allow write: if isAdmin();
+          }
+        }
       }
     }
     

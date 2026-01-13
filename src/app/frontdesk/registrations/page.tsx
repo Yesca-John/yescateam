@@ -92,6 +92,10 @@ export default function FrontdeskRegistrationsPage() {
   const [showFaithboxDialog, setShowFaithboxDialog] = useState(false);
   const [pendingRegistration, setPendingRegistration] = useState<Registration | null>(null);
 
+  // ID Generation Confirmation Dialog State
+  const [showIdConfirmDialog, setShowIdConfirmDialog] = useState(false);
+  const [pendingIdRegistration, setPendingIdRegistration] = useState<Registration | null>(null);
+
   // Profile Sheet State
   const [showProfileSheet, setShowProfileSheet] = useState(false);
   const [profileData, setProfileData] = useState<{
@@ -251,12 +255,13 @@ export default function FrontdeskRegistrationsPage() {
   // Handle Print ID Click - Check if faithbox type needs confirmation
   const handlePrintClick = (reg: Registration) => {
     if (reg.registration_type === 'faithbox' && !reg.collected_faithbox) {
-      // Show faithbox collection confirmation dialog
+      // Show faithbox collection confirmation dialog first
       setPendingRegistration(reg);
       setShowFaithboxDialog(true);
     } else {
-      // Directly generate ID for non-faithbox or already collected
-      generateId(reg, reg.registration_type === 'faithbox' ? true : undefined);
+      // Show ID generation confirmation for all types
+      setPendingIdRegistration(reg);
+      setShowIdConfirmDialog(true);
     }
   };
 
@@ -272,7 +277,11 @@ export default function FrontdeskRegistrationsPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate ID');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || errorData.details || 'Failed to generate ID');
+      }
 
       const result = await response.json();
 
@@ -282,9 +291,11 @@ export default function FrontdeskRegistrationsPage() {
       // Close dialog if open
       setShowFaithboxDialog(false);
       setPendingRegistration(null);
+      setShowIdConfirmDialog(false);
+      setPendingIdRegistration(null);
     } catch (error) {
       console.error('Generate ID error:', error);
-      alert('Failed to generate ID card');
+      alert(`Failed to generate ID card: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -292,6 +303,16 @@ export default function FrontdeskRegistrationsPage() {
   const handleFaithboxConfirm = (collected: boolean) => {
     if (pendingRegistration) {
       generateId(pendingRegistration, collected);
+    }
+  };
+
+  // Handle ID generation confirmation
+  const handleIdConfirm = () => {
+    if (pendingIdRegistration) {
+      generateId(
+        pendingIdRegistration,
+        pendingIdRegistration.registration_type === 'faithbox' ? true : undefined
+      );
     }
   };
 
@@ -928,6 +949,80 @@ export default function FrontdeskRegistrationsPage() {
               >
                 <X className="w-4 h-4 mr-2" />
                 No
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ID Generation Confirmation Dialog */}
+      {showIdConfirmDialog && pendingIdRegistration && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-3 shrink-0">
+                <Printer className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  Generate ID & Assign Group
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Confirm group assignment for {pendingIdRegistration.full_name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                  pendingIdRegistration.gender === 'M' ? 'bg-blue-500' : 'bg-pink-500'
+                }`}>
+                  {pendingIdRegistration.full_name?.charAt(0) || '?'}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{pendingIdRegistration.full_name}</p>
+                  <p className="text-xs text-gray-500">{pendingIdRegistration.member_id}</p>
+                </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-lg ${
+                  pendingIdRegistration.registration_type === 'faithbox'
+                    ? 'bg-violet-100 text-violet-700'
+                    : pendingIdRegistration.registration_type === 'kids'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {pendingIdRegistration.registration_type}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 bg-blue-50 text-blue-800 rounded-lg p-3 mb-4 text-sm">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p>This will assign a team group and mark attendance. Continue?</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  handleIdConfirm();
+                  setShowIdConfirmDialog(false);
+                  setPendingIdRegistration(null);
+                }}
+                className="flex-1 bg-gray-900 hover:bg-gray-800"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Yes, Generate
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowIdConfirmDialog(false);
+                  setPendingIdRegistration(null);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
               </Button>
             </div>
           </div>

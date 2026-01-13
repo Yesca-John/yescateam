@@ -236,21 +236,64 @@ export async function checkPhonePeOrderStatus(merchantTransactionId: string) {
   // Generate X-VERIFY header for status check
   const xVerify = generateStatusXVerifyHeader(merchantTransactionId);
 
-  const response = await fetch(statusUrl, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-VERIFY': xVerify,
-      'X-MERCHANT-ID': PHONEPE_CONFIG.MERCHANT_ID,
-    },
-  });
+  try {
+    const response = await fetch(statusUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-VERIFY': xVerify,
+        'X-MERCHANT-ID': PHONEPE_CONFIG.MERCHANT_ID,
+      },
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to check order status: ${JSON.stringify(error)}`);
+    // Get response text first to handle empty responses
+    const responseText = await response.text();
+    
+    if (!responseText || responseText.trim() === '') {
+      console.error('Empty response from PhonePe status check for:', merchantTransactionId);
+      return {
+        success: false,
+        code: 'EMPTY_RESPONSE',
+        message: 'Empty response from payment gateway',
+        data: null,
+      };
+    }
+
+    // Try to parse JSON
+    let jsonData;
+    try {
+      jsonData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse PhonePe response:', responseText);
+      return {
+        success: false,
+        code: 'INVALID_RESPONSE',
+        message: 'Invalid response from payment gateway',
+        data: null,
+        raw_response: responseText,
+      };
+    }
+
+    if (!response.ok) {
+      console.error('PhonePe status check failed:', jsonData);
+      return {
+        success: false,
+        code: jsonData.code || 'API_ERROR',
+        message: jsonData.message || 'Failed to check payment status',
+        data: jsonData.data || null,
+      };
+    }
+
+    return jsonData;
+  } catch (error) {
+    console.error('Error checking PhonePe order status:', error);
+    return {
+      success: false,
+      code: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Network error checking payment status',
+      data: null,
+    };
   }
-
-  return await response.json();
 }
 
 /**

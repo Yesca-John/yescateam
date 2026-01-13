@@ -257,7 +257,7 @@ export default function VolunteerRegistrationPage() {
                       <ShieldCheck className="w-5 h-5 mr-2" />
                       Verify Phone & Continue
                     </>
-                  )}
+                  )}    
                 </Button>
 
                 <p className="text-center text-sm text-gray-500 dark:text-gray-400">

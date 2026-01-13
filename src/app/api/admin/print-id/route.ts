@@ -8,6 +8,8 @@ import { adminDb } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Print ID API called');
+    
     const { registration_id, collected_faithbox } = await request.json();
 
     if (!registration_id) {
@@ -16,6 +18,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log('Processing registration:', registration_id);
 
     const timestamp = new Date().toISOString();
 
@@ -26,7 +30,10 @@ export async function POST(request: NextRequest) {
       .collection('registrations')
       .doc(registration_id);
 
+    console.log('Fetching registration document...');
     const regDoc = await regRef.get();
+    console.log('Registration exists:', regDoc.exists);
+    
     const regData = regDoc.data();
 
     if (!regData) {
@@ -75,10 +82,19 @@ export async function POST(request: NextRequest) {
       };
 
       // Only update faithbox status if it's a faithbox registration
-      if (collected_faithbox !== undefined) {
+      if (collected_faithbox !== undefined && collected_faithbox !== null) {
         updateData.collected_faithbox = collected_faithbox;
-        updateData.faithbox_collected_at = collected_faithbox ? timestamp : null;
+        if (collected_faithbox) {
+          updateData.faithbox_collected_at = timestamp;
+        }
       }
+
+      // Filter out undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
 
       batch.update(regRef, updateData);
       batch.update(counterRef, {
@@ -95,10 +111,19 @@ export async function POST(request: NextRequest) {
       };
 
       // Only update faithbox status if provided and it's a faithbox registration
-      if (collected_faithbox !== undefined) {
+      if (collected_faithbox !== undefined && collected_faithbox !== null) {
         updateData.collected_faithbox = collected_faithbox;
-        updateData.faithbox_collected_at = collected_faithbox ? timestamp : null;
+        if (collected_faithbox) {
+          updateData.faithbox_collected_at = timestamp;
+        }
       }
+
+      // Filter out undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
 
       await regRef.update(updateData);
     }
