@@ -1,9 +1,30 @@
 'use client';
 
-import React from 'react';
-import { Instagram, Youtube, Clock, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Instagram, Youtube, Clock, ArrowRight, Download, X, ZoomIn } from 'lucide-react';
+import Image from 'next/image';
 
 const PhotoPage = () => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const photos = [
+    { src: '/images/YC26Boys2.png', title: 'YC26 Boys', downloadName: 'YC26_Boys.png' },
+    { src: '/images/YC26GIRLS.png', title: 'YC26 Girls', downloadName: 'YC26_Girls.png' },
+  ];
+
+  const handleDownload = async (imageSrc: string, filename: string) => {
+    const response = await fetch(imageSrc);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-yellow-500">
       {/* Animated Particles */}
@@ -37,30 +58,69 @@ const PhotoPage = () => {
         </div>
 
         {/* Main Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-7xl md:text-9xl font-black text-white drop-shadow-[0_8px_16px_rgba(0,0,0,0.3)] mb-4 tracking-tight leading-none" style={{
+        <div className="text-center mb-8">
+          <h1 className="text-6xl md:text-8xl font-black text-white drop-shadow-[0_8px_16px_rgba(0,0,0,0.3)] mb-6 tracking-tight leading-none" style={{
             textShadow: '0 4px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(255,200,0,0.4)'
           }}>
-            PHOTO
+            PHOTO GALLERY
           </h1>
           
-          {/* Countdown Box */}
-          <div className="inline-block bg-white/95 backdrop-blur-sm rounded-3xl px-8 py-6 mb-6 shadow-2xl">
-            <div className="flex items-center gap-3 justify-center mb-3">
-              <Clock className="w-8 h-8 text-orange-600" />
-              <p className="text-2xl font-bold text-gray-800">Available In</p>
+          <div className="inline-flex items-center gap-3 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-full shadow-xl mb-6">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xl font-bold text-gray-800">Now Available!</span>
+          </div>
+        </div>
+
+        {/* Photo Grid */}
+        <div className="space-y-8 mb-8">
+          {photos.map((photo, index) => (
+            <div key={index} className="group relative">
+              <div 
+                className="relative w-full rounded-2xl overflow-hidden bg-gray-900/20 cursor-pointer shadow-2xl"
+                onClick={() => setSelectedImage(photo.src)}
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.title}
+                  width={2000}
+                  height={800}
+                  className="w-full h-auto hover:scale-105 transition-transform duration-500"
+                  unoptimized
+                />
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+                  <div className="bg-white/90 text-gray-800 p-5 rounded-full shadow-lg backdrop-blur-sm pointer-events-none">
+                    <ZoomIn className="w-7 h-7" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white drop-shadow-lg">{photo.title}</h3>
+                <button
+                  onClick={() => handleDownload(photo.src, photo.downloadName)}
+                  className="flex items-center gap-2 bg-white/95 hover:bg-white text-orange-600 px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all backdrop-blur-sm"
+                >
+                  <Download className="w-6 h-6" />
+                  <span className="font-bold text-lg">Download</span>
+                </button>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-600 to-red-600 text-white px-12 py-6 rounded-2xl shadow-lg">
-              <div className="text-6xl font-black">1</div>
-              <div className="text-xl font-bold tracking-widest mt-1">DAY</div>
+          ))}
+        </div>
+
+        {/* Share Link Section */}
+        <div className="text-center mb-8">
+          <div className="inline-block bg-white/95 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-xl">
+            <p className="text-gray-700 text-lg font-semibold mb-2">Share this page:</p>
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-700 to-red-700 text-white px-8 py-3 rounded-full shadow-lg">
+              <ArrowRight className="w-6 h-6" />
+              <span className="text-2xl font-black tracking-wide">YC26.IN/PIC</span>
             </div>
           </div>
-
-          {/* URL Section */}
         </div>
 
         {/* Social Media Section - Compact Grid */}
-        <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-6">
           {/* YouTube CBA */}
           <a
             href="https://www.youtube.com/@ChristianBrethrenAssemblies"
@@ -126,12 +186,49 @@ const PhotoPage = () => {
         </div>
 
         {/* Footer Message */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-6">
           <p className="text-white text-lg font-semibold drop-shadow-lg">
-            📸 Stay tuned for amazing memories!
+            📸 Download and share these amazing memories!
           </p>
         </div>
       </div>
+
+      {/* Fullscreen Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg hover:scale-110 transition-transform z-10"
+            aria-label="Close"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const photo = photos.find(p => p.src === selectedImage);
+              if (photo) handleDownload(photo.src, photo.downloadName);
+            }}
+            className="absolute top-4 right-20 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform z-10"
+            aria-label="Download"
+          >
+            <Download className="w-6 h-6" />
+          </button>
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Image
+              src={selectedImage}
+              alt="Full size preview"
+              fill
+              className="object-contain"
+              unoptimized
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes float {
